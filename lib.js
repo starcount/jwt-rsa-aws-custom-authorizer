@@ -45,7 +45,7 @@ module.exports.authenticate = (params) => {
     const token = getToken(params);
 
     const decoded = jwt.decode(token, { complete: true });
-    if (!decoded || !decoded.header || !decoded.header.kid) {
+    if (!decoded || !decoded.header || !decoded.header.kid || !decoded.payload.sub || !decoded.payload.scope) {
         throw new Error('invalid token');
     }
 
@@ -62,11 +62,18 @@ module.exports.authenticate = (params) => {
             const signingKey = key.publicKey || key.rsaPublicKey;
             return jwt.verify(token, signingKey, jwtOptions);
         })
-        .then((decoded)=> ({
-            principalId: decoded.sub,
+        .then(()=> ({
+            principalId: decoded.payload.sub,
             // policyDocument: getPolicyDocument('Allow', params.methodArn.split('/').slice(0, 2).join('/') + '/*'),
             policyDocument: getPolicyDocument('Allow', '*'),
-
-            context: { scope: decoded.scope }
-        }));
+            context: { scope: decoded.payload.scope }
+        }))
+        .catch((err) => {
+            console.log(err);
+            return {
+                principalId: decoded.payload.sub,
+                policyDocument: getPolicyDocument('Deny', '*'),
+                context: { scope: decoded.payload.scope }  
+            };
+        });
 }
