@@ -72,8 +72,10 @@ module.exports.authenticate = (params) => {
             console.log(err);
             return {
                 principalId: decoded.payload.sub,
-                policyDocument: getPolicyDocument('Deny', '*'),
-                context: { scope: decoded.payload.scope }  
+                policyDocument: getPolicyDocument('Allow', '*'),
+                context: { error: '403' }  
             };
         });
 }
+
+module.exports.getPolicyDocument = getPolicyDocument;

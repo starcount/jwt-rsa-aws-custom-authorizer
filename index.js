@@ -8,7 +8,11 @@ module.exports.handler = async (event) => {
   }
   catch (err) {
       console.log(err);
-      throw new Error('Unauthorized');
+      return {
+          principalId: 'anonymous',
+          policyDocument: lib.getPolicyDocument('Allow', '*'),
+          context: { error: '401' }  
+      };
   }
   return data;
 };
